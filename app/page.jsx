@@ -185,15 +185,7 @@ ${idea.layout ? `
   <div class="section-content">${idea.layout}</div>
 </div>` : ""}
 
-<!-- FICHA IA -->
-${idea.ficha ? `
-<div class="section">
-  <div class="section-header">
-    <div class="section-icon" style="background:#FFBA0020;">⭐</div>
-    <div class="section-title" style="color:#111;">ANÁLISIS Y RECOMENDACIÓN</div>
-  </div>
-  <div class="section-content">${idea.ficha.replace(/\*\*/g,"")}</div>
-</div>` : ""}
+
 
 <!-- FOTOS -->
 ${fotos.length > 1 ? `
