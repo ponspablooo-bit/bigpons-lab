@@ -11,17 +11,17 @@ const C = {
 };
 
 const STAGES = [
-  { id: "ideas",       label: "Ideas / Propuesta",    etapa: "I",  color: "#3B82F6", desc: "5.1 Ideas y Propuestas" },
-  { id: "viabilidad",  label: "Evaluación",            etapa: "I",  color: "#8B5CF6", desc: "5.2 Evaluación y Viabilidad" },
-  { id: "propuesta",   label: "Propuesta Completa",    etapa: "I",  color: "#F97316", desc: "5.3 Propuesta Completa" },
-  { id: "aprobacion",  label: "Aprobación GG",         etapa: "I",  color: "#FFBA00", desc: "5.4 / 5.5 Aprobación" },
-  { id: "lanzamiento", label: "Lanzamiento",           etapa: "II", color: "#FB923C", desc: "6.1 Lanzamiento" },
-  { id: "seguimiento", label: "Seguimiento & Ajustes", etapa: "II", color: "#22C55E", desc: "Post-lanzamiento" },
+  { id: "fase1",       label: "Fase 1 — Idea",          etapa: "I",  color: "#3B82F6", desc: "Propuesta inicial" },
+  { id: "prueba",      label: "Prueba de Producto",      etapa: "I",  color: "#8B5CF6", desc: "Desarrollo técnico" },
+  { id: "propuesta",   label: "Propuesta Completa",      etapa: "I",  color: "#F97316", desc: "5.3 Propuesta Completa" },
+  { id: "aprobacion",  label: "Aprobación GG",           etapa: "I",  color: "#FFBA00", desc: "5.4 / 5.5 Aprobación" },
+  { id: "lanzamiento", label: "Lanzamiento",             etapa: "II", color: "#FB923C", desc: "6.1 Lanzamiento" },
+  { id: "seguimiento", label: "Seguimiento & Ajustes",   etapa: "II", color: "#22C55E", desc: "Post-lanzamiento" },
 ];
 
 const CATEGORIAS = ["Hamburguesas","Salsas & Condimentos","Sides","Bebidas","Postres","Ingredientes Premium","Otro"];
 const TIPOS = ["Lanzamiento Grande","Lanzamiento Satélite"];
-const OBJETIVOS = ["Volumen","Rentabilidad","Ambos"];
+const SEGMENTOS = ["S","A","B","C"];
 
 async function callClaude(userMsg, system, useSearch = false) {
   const body = {
@@ -40,6 +40,7 @@ async function callClaude(userMsg, system, useSearch = false) {
 const SYS_TRENDS = `Sos un experto en tendencias gastronómicas globales especializado en hamburguesas y fast food premium americano. Respondé en español de Argentina, conciso y práctico. Enfocate en los últimos 6-12 meses.`;
 const SYS_PRODUCT = `Sos el head of product development de BIG PONS, hamburguesería premium americana con locales en Argentina y Miami. Desarrollás conceptos viables, alineados a la marca. Respondé en español de Argentina.`;
 const SYS_RECIPE = `Sos el chef de desarrollo de BIG PONS. Hacés recetas precisas, escalables, listas para producción en fast food premium. Incluís gramajes, tiempos, temperatura, notas de calidad. Respondé en español de Argentina.`;
+const SYS_LAYOUT = `Sos el jefe de operaciones de BIG PONS. Desarrollás procedimientos de armado claros, paso a paso, con layout visual en texto para que cualquier empleado pueda armar el producto correctamente. Incluís el orden de capas, tiempos, temperaturas y puntos de control de calidad. Respondé en español de Argentina.`;
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -67,6 +68,9 @@ textarea{resize:vertical;line-height:1.6}
 .btn-gh:hover{border-color:#888;color:#F0F0F0}
 .btn-rd{background:transparent;border:1px solid rgba(239,68,68,.3);color:#EF4444;padding:7px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
 .btn-rd:hover{background:rgba(239,68,68,.1)}
+.btn-green{background:#22C55E;color:#000;border:none;padding:10px 22px;border-radius:8px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+.btn-green:hover:not(:disabled){background:#4ade80;transform:translateY(-1px)}
+.btn-green:disabled{background:#2a2a2a;color:#555;cursor:not-allowed}
 .tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px}
 .tab{background:transparent;border:none;color:#888;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:12px 20px;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
 .tab.on{color:#FFBA00}
@@ -74,7 +78,10 @@ textarea{resize:vertical;line-height:1.6}
 .lbl{font-size:11px;font-weight:700;letter-spacing:1.5px;color:#888;margin-bottom:6px}
 .fg{display:grid;gap:16px}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:580px){.fr{grid-template-columns:1fr}}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:580px){.fr{grid-template-columns:1fr}.fr3{grid-template-columns:1fr}}
+.phase-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.section-block{background:#161616;border:1px solid #252525;border-radius:12px;padding:24px;margin-bottom:16px}
 `;
 
 const Spinner = ({ size = 20, color = "#FFBA00" }) => (
@@ -112,43 +119,121 @@ function Modal({ title, onClose, children, wide }) {
   );
 }
 
-function IdeaForm({ initial, onSave, onCancel }) {
-  const empty = { name:"", categoria:"Hamburguesas", tipo:"Lanzamiento Grande", objetivo:"Rentabilidad", concept:"", perfil:"", precioARS:"", precioUSD:"", cmv:"", ingredientes:"", recipe:"", viabilidad:"", notas:"", trend:"", stage:"ideas" };
+// ── FASE 1 FORM ───────────────────────────────────────────────────────────────
+function Fase1Form({ initial, onSave, onCancel }) {
+  const empty = {
+    name:"", categoria:"Hamburguesas", tipo:"Lanzamiento Grande",
+    segmento:"A", concept:"", perfil:"",
+    trend:"", stage:"fase1",
+    // fase 2 fields preserved if editing
+    insumos:"", recipe:"", layout:"", viabilidad:""
+  };
   const [f, setF] = useState(initial ? { ...empty, ...initial } : empty);
   const set = (k, v) => setF(p => ({ ...p, [k]:v }));
   const ok = f.name.trim().length > 0;
+
   return (
     <div className="fg">
+      {/* Fase 1 badge */}
+      <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", background:"rgba(59,130,246,.1)", border:"1px solid rgba(59,130,246,.3)", borderRadius:10 }}>
+        <span style={{ fontSize:16 }}>💡</span>
+        <div>
+          <div style={{ fontSize:12, fontWeight:700, color:"#3B82F6", letterSpacing:.5 }}>FASE 1 — IDEA INICIAL</div>
+          <div style={{ fontSize:11, color:"#888" }}>Completá los datos básicos del producto para su evaluación</div>
+        </div>
+      </div>
+
       <div><Lbl>NOMBRE DEL PRODUCTO *</Lbl><input placeholder="Ej: Smash Burger Trufa Negra" value={f.name} onChange={e=>set("name",e.target.value)} /></div>
-      <div className="fr">
-        <div><Lbl>CATEGORÍA</Lbl><select value={f.categoria} onChange={e=>set("categoria",e.target.value)}>{CATEGORIAS.map(c=><option key={c}>{c}</option>)}</select></div>
-        <div><Lbl>TIPO DE LANZAMIENTO</Lbl><select value={f.tipo} onChange={e=>set("tipo",e.target.value)}>{TIPOS.map(t=><option key={t}>{t}</option>)}</select></div>
+
+      <div className="fr3">
+        <div>
+          <Lbl>CATEGORÍA</Lbl>
+          <select value={f.categoria} onChange={e=>set("categoria",e.target.value)}>
+            {CATEGORIAS.map(c=><option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <Lbl>TIPO DE LANZAMIENTO</Lbl>
+          <select value={f.tipo} onChange={e=>set("tipo",e.target.value)}>
+            {TIPOS.map(t=><option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div>
+          <Lbl>SEGMENTO</Lbl>
+          <select value={f.segmento} onChange={e=>set("segmento",e.target.value)}>
+            {SEGMENTOS.map(s=><option key={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
-      <div className="fr">
-        <div><Lbl>OBJETIVO</Lbl><select value={f.objetivo} onChange={e=>set("objetivo",e.target.value)}>{OBJETIVOS.map(o=><option key={o}>{o}</option>)}</select></div>
-        <div><Lbl>ETAPA ACTUAL (P08.001)</Lbl><select value={f.stage} onChange={e=>set("stage",e.target.value)}>{STAGES.map(s=><option key={s.id} value={s.id}>Etapa {s.etapa} – {s.label}</option>)}</select></div>
+
+      <div>
+        <Lbl>CONCEPTO Y DESCRIPCIÓN DEL PRODUCTO</Lbl>
+        <textarea rows={5} placeholder="Describí el producto: qué es, qué lo hace especial, la inspiración, por qué encaja con BIG PONS..." value={f.concept} onChange={e=>set("concept",e.target.value)} />
       </div>
-      <div><Lbl>CONCEPTO / DESCRIPCIÓN</Lbl><textarea rows={4} placeholder="Qué es el producto, qué lo hace especial, por qué encaja con BIG PONS..." value={f.concept} onChange={e=>set("concept",e.target.value)} /></div>
-      <div className="fr">
-        <div><Lbl>PERFIL DE CLIENTE</Lbl><input placeholder="Ej: Adultos 25-40, foodie premium" value={f.perfil} onChange={e=>set("perfil",e.target.value)} /></div>
-        <div><Lbl>CMV OBJETIVO (%)</Lbl><input placeholder="Ej: 28" value={f.cmv} onChange={e=>set("cmv",e.target.value)} /></div>
+
+      <div>
+        <Lbl>PERFIL DE CLIENTE OBJETIVO</Lbl>
+        <input placeholder="Ej: Adultos 25-40, foodie premium, busca experiencias nuevas" value={f.perfil} onChange={e=>set("perfil",e.target.value)} />
       </div>
-      <div className="fr">
-        <div><Lbl>PRECIO VENTA — ARG (ARS)</Lbl><input placeholder="Ej: 12.500" value={f.precioARS} onChange={e=>set("precioARS",e.target.value)} /></div>
-        <div><Lbl>PRECIO VENTA — MIAMI (USD)</Lbl><input placeholder="Ej: 18.50" value={f.precioUSD} onChange={e=>set("precioUSD",e.target.value)} /></div>
+
+      <div>
+        <Lbl>TENDENCIA DE ORIGEN (si aplica)</Lbl>
+        <input placeholder="Ej: Smash burgers con queso americano fundido" value={f.trend} onChange={e=>set("trend",e.target.value)} />
       </div>
-      <div><Lbl>INGREDIENTES CLAVE</Lbl><textarea rows={3} placeholder="Ingredientes principales o insumos nuevos necesarios..." value={f.ingredientes} onChange={e=>set("ingredientes",e.target.value)} /></div>
-      <div><Lbl>RECETA / PROCEDIMIENTO (opcional)</Lbl><textarea rows={5} placeholder="Podés cargarla acá o generarla con IA desde el detalle..." value={f.recipe} onChange={e=>set("recipe",e.target.value)} /></div>
-      <div><Lbl>NOTAS ADICIONALES</Lbl><textarea rows={3} placeholder="Observaciones, restricciones, aprobaciones pendientes..." value={f.notas} onChange={e=>set("notas",e.target.value)} /></div>
-      <div><Lbl>TENDENCIA DE ORIGEN (si aplica)</Lbl><input placeholder="Ej: Smash burgers con queso americano fundido" value={f.trend} onChange={e=>set("trend",e.target.value)} /></div>
+
       <div style={{ display:"flex", gap:10, justifyContent:"flex-end", paddingTop:8, borderTop:`1px solid #252525` }}>
         <button className="btn-gh" onClick={onCancel}>Cancelar</button>
-        <button className="btn-gold" disabled={!ok} onClick={()=>onSave(f)}>{initial ? "💾 Guardar cambios" : "➕ Crear idea"}</button>
+        <button className="btn-gold" disabled={!ok} onClick={()=>onSave(f)}>
+          {initial ? "💾 Guardar cambios" : "➕ Crear idea"}
+        </button>
       </div>
     </div>
   );
 }
 
+// ── PRUEBA DE PRODUCTO FORM ───────────────────────────────────────────────────
+function PruebaForm({ initial, onSave, onCancel }) {
+  const [f, setF] = useState({
+    insumos: initial?.insumos || "",
+    recipe: initial?.recipe || "",
+    layout: initial?.layout || "",
+  });
+  const set = (k, v) => setF(p => ({ ...p, [k]:v }));
+
+  return (
+    <div className="fg">
+      <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", background:"rgba(139,92,246,.1)", border:"1px solid rgba(139,92,246,.3)", borderRadius:10 }}>
+        <span style={{ fontSize:16 }}>🧪</span>
+        <div>
+          <div style={{ fontSize:12, fontWeight:700, color:"#8B5CF6", letterSpacing:.5 }}>PRUEBA DE PRODUCTO</div>
+          <div style={{ fontSize:11, color:"#888" }}>Cargá o editá el detalle técnico del producto</div>
+        </div>
+      </div>
+
+      <div>
+        <Lbl>INSUMOS — LISTADO DE INGREDIENTES</Lbl>
+        <textarea rows={6} placeholder={`Listá todos los ingredientes con cantidad por porción. Ej:\n- Pan brioche — 1 unidad (80g)\n- Medallón de carne — 180g\n- Queso cheddar — 2 fetas (30g)\n- Lechuga — 20g\n- Tomate — 2 rodajas (40g)`} value={f.insumos} onChange={e=>set("insumos",e.target.value)} />
+      </div>
+
+      <div>
+        <Lbl>RECETA DETALLADA</Lbl>
+        <textarea rows={8} placeholder={`Describí el procedimiento paso a paso. Ej:\n1. Precalentar plancha a 220°C\n2. Formar medallón de 180g...\n3. Cocinar 2 min por lado...\n4. Agregar queso y cubrir 30 seg...`} value={f.recipe} onChange={e=>set("recipe",e.target.value)} />
+      </div>
+
+      <div>
+        <Lbl>PROCEDIMIENTO Y LAYOUT DE ARMADO</Lbl>
+        <textarea rows={8} placeholder={`Describí el orden de armado del producto. Ej:\n\nLAYOUT (de abajo hacia arriba):\n[ BASE DEL PAN ]\n[ SALSA ESPECIAL — 15g ]\n[ LECHUGA — 20g ]\n[ TOMATE x2 ]\n[ MEDALLÓN + QUESO ]\n[ CEBOLLA CARAMELIZADA ]\n[ TAPA DEL PAN ]\n\nPROCEDIMIENTO:\n1. Tostar pan en plancha 45 seg...\n2. Aplicar salsa en base...\n3. Montar según layout...`} value={f.layout} onChange={e=>set("layout",e.target.value)} />
+      </div>
+
+      <div style={{ display:"flex", gap:10, justifyContent:"flex-end", paddingTop:8, borderTop:`1px solid #252525` }}>
+        <button className="btn-gh" onClick={onCancel}>Cancelar</button>
+        <button className="btn-gold" onClick={()=>onSave(f)}>💾 Guardar</button>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function BigPonsLab() {
   const [tab, setTab] = useState("tendencias");
   const [ideas, setIdeas] = useState([]);
@@ -156,31 +241,24 @@ export default function BigPonsLab() {
   const [saving, setSaving] = useState(false);
   const [newModal, setNewModal] = useState(false);
 
-  useEffect(() => {
-    loadIdeas().then(d => { setIdeas(d); setLoaded(true); });
-  }, []);
+  useEffect(() => { loadIdeas().then(d => { setIdeas(d); setLoaded(true); }); }, []);
 
   useEffect(() => {
     if (!loaded) return;
     setSaving(true);
-    const t = setTimeout(async () => {
-      await saveIdeas(ideas);
-      setSaving(false);
-    }, 1000);
+    const t = setTimeout(async () => { await saveIdeas(ideas); setSaving(false); }, 1000);
     return () => clearTimeout(t);
   }, [ideas, loaded]);
 
   const addIdea = useCallback((data) => {
-    setIdeas(p => [{ id: Date.now(), createdAt: new Date().toISOString(), ...data }, ...p]);
+    setIdeas(p => [{ id:Date.now(), createdAt:new Date().toISOString(), stage:"fase1", ...data }, ...p]);
     setNewModal(false);
   }, []);
-
   const updateIdea = useCallback((id, changes) => {
-    setIdeas(p => p.map(i => i.id === id ? { ...i, ...changes } : i));
+    setIdeas(p => p.map(i => i.id===id ? {...i,...changes} : i));
   }, []);
-
   const deleteIdea = useCallback((id) => {
-    if (confirm("¿Eliminar esta idea?")) setIdeas(p => p.filter(i => i.id !== id));
+    if (confirm("¿Eliminar esta idea?")) setIdeas(p => p.filter(i=>i.id!==id));
   }, []);
 
   const TABS = [
@@ -214,23 +292,22 @@ export default function BigPonsLab() {
       </div>
 
       <div style={{ maxWidth:1100, margin:"0 auto", padding:"32px 24px" }}>
-        {!loaded && (
-          <div style={{ textAlign:"center", padding:80 }}><Spinner size={40} /><p style={{ color:"#888", marginTop:16 }} className="pulse">Cargando datos...</p></div>
-        )}
+        {!loaded && <div style={{ textAlign:"center", padding:80 }}><Spinner size={40} /><p style={{ color:"#888", marginTop:16 }} className="pulse">Cargando datos...</p></div>}
         {loaded && tab==="tendencias" && <TendenciasTab addIdea={addIdea} />}
         {loaded && tab==="ideas"      && <IdeasTab ideas={ideas} updateIdea={updateIdea} deleteIdea={deleteIdea} />}
         {loaded && tab==="pipeline"   && <PipelineTab ideas={ideas} updateIdea={updateIdea} deleteIdea={deleteIdea} />}
       </div>
 
       {newModal && (
-        <Modal title="NUEVA IDEA MANUAL" onClose={()=>setNewModal(false)} wide>
-          <IdeaForm onSave={addIdea} onCancel={()=>setNewModal(false)} />
+        <Modal title="NUEVA IDEA — FASE 1" onClose={()=>setNewModal(false)} wide>
+          <Fase1Form onSave={addIdea} onCancel={()=>setNewModal(false)} />
         </Modal>
       )}
     </div>
   );
 }
 
+// ── TENDENCIAS ────────────────────────────────────────────────────────────────
 function TendenciasTab({ addIdea }) {
   const [cat, setCat] = useState("hamburguesas");
   const [region, setRegion] = useState("global");
@@ -264,7 +341,7 @@ function TendenciasTab({ addIdea }) {
     setDeveloping(trend.title); setDraft(null);
     try {
       const result = await callClaude(
-        `Tendencia: "${trend.title}"\n${trend.body}\n\nDesarrollá un concepto de producto para BIG PONS:\n**NOMBRE DEL PRODUCTO:**\n**CONCEPTO:**\n**PERFIL DE CLIENTE:**\n**PRECIO ARS:**\n**PRECIO USD (Miami):**\n**TOPE CMV (%):**\n**INGREDIENTES CLAVE:**\n**OBJETIVO:**\n**TIPO:** (grande o satélite)`,
+        `Tendencia: "${trend.title}"\n${trend.body}\n\nDesarrollá un concepto de producto para BIG PONS:\n**NOMBRE DEL PRODUCTO:**\n**CONCEPTO Y DESCRIPCIÓN:**\n**PERFIL DE CLIENTE:**\n**SEGMENTO:** (S, A, B o C según precio/posicionamiento)\n**TIPO:** (Lanzamiento Grande o Satélite)\n**CATEGORÍA:**`,
         SYS_PRODUCT
       );
       setDraft({ trend, content: result });
@@ -277,13 +354,15 @@ function TendenciasTab({ addIdea }) {
     const lines = draft.content.split("\n");
     const nameLine = lines.find(l=>/nombre/i.test(l)) || lines[0];
     const name = nameLine.replace(/\*\*/g,"").replace(/.*?:/,"").trim() || draft.trend.title;
-    addIdea({ name, trend:draft.trend.title, categoria:cat, region, concept:draft.content, stage:"ideas" });
+    const segLine = lines.find(l=>/segmento/i.test(l)) || "";
+    const segmento = ["S","A","B","C"].find(s => segLine.toUpperCase().includes(s)) || "A";
+    addIdea({ name, trend:draft.trend.title, categoria:cat, region, concept:draft.content, segmento, stage:"fase1" });
     setSaved(name); setDraft(null);
   };
 
   return (
     <div className="fu">
-      <SectionTitle sub="Buscá tendencias globales en tiempo real y convertílas en conceptos para BIG PONS">EXPLORADOR DE TENDENCIAS</SectionTitle>
+      <SectionTitle sub="Buscá tendencias globales en tiempo real y convertílas en ideas para BIG PONS">EXPLORADOR DE TENDENCIAS</SectionTitle>
       <div style={{ display:"flex", gap:12, marginBottom:24, flexWrap:"wrap", alignItems:"flex-end" }}>
         {[
           { lbl:"CATEGORÍA", val:cat, set:setCat, opts:[["hamburguesas","🍔 Hamburguesas"],["salsas y condimentos","🫙 Salsas"],["sides","🍟 Sides"],["bebidas","🥤 Bebidas"],["postres fast food","🍨 Postres"],["ingredientes premium","⭐ Premium"],["técnicas de cocción","🔥 Técnicas"]] },
@@ -304,7 +383,7 @@ function TendenciasTab({ addIdea }) {
       {saved && (
         <div className="fu" style={{ background:"rgba(34,197,94,.1)", border:`1px solid rgba(34,197,94,.3)`, borderRadius:10, padding:"12px 18px", marginBottom:16, display:"flex", alignItems:"center", gap:10 }}>
           <span style={{ color:"#22C55E" }}>✓</span>
-          <span style={{ fontSize:14 }}>Guardada: <strong>"{saved}"</strong> — revisala en Ideas</span>
+          <span style={{ fontSize:14 }}>Guardada en Fase 1: <strong>"{saved}"</strong> — revisala en Ideas</span>
           <button className="btn-gh" style={{ marginLeft:"auto", padding:"4px 10px" }} onClick={()=>setSaved(null)}>✕</button>
         </div>
       )}
@@ -315,7 +394,7 @@ function TendenciasTab({ addIdea }) {
         <div className="fu" style={{ background:"#161616", border:`2px solid #FFBA00`, borderRadius:14, padding:28, marginBottom:20 }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, gap:12, flexWrap:"wrap" }}>
             <div>
-              <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, color:"#FFBA00", marginBottom:4 }}>CONCEPTO GENERADO POR IA</div>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, color:"#FFBA00", marginBottom:4 }}>CONCEPTO GENERADO POR IA — FASE 1</div>
               <div style={{ fontSize:13, color:"#888" }}>Basado en: {draft.trend.title}</div>
             </div>
             <div style={{ display:"flex", gap:8 }}>
@@ -352,21 +431,29 @@ function TendenciasTab({ addIdea }) {
   );
 }
 
+// ── IDEAS TAB ─────────────────────────────────────────────────────────────────
 function IdeasTab({ ideas, updateIdea, deleteIdea }) {
   const [sel, setSel] = useState(null);
-  const [subTab, setSubTab] = useState("concepto");
+  const [subTab, setSubTab] = useState("fase1");
   const [loading, setLoading] = useState(false);
-  const [editModal, setEditModal] = useState(false);
+  const [editFase1, setEditFase1] = useState(false);
+  const [editPrueba, setEditPrueba] = useState(false);
   const [filter, setFilter] = useState("todas");
 
   const idea = ideas.find(i=>i.id===sel);
   const filtered = filter==="todas" ? ideas : ideas.filter(i=>i.stage===filter);
 
+  const aprobarFase1 = () => {
+    if (!idea) return;
+    updateIdea(sel, { stage:"prueba" });
+    setSubTab("prueba");
+  };
+
   const genRecipe = async () => {
     if (!idea) return; setLoading(true);
     try {
       const r = await callClaude(
-        `Receta completa para producción:\nProducto: ${idea.name}\nConcepto: ${idea.concept||""}\nIngredientes clave: ${idea.ingredientes||""}\nCMV objetivo: ${idea.cmv||""}%\n\nIncluí:\n**NOMBRE FINAL:**\n**DESCRIPCIÓN PARA MENÚ:**\n**INGREDIENTES** (gramajes por porción):\n**PROCEDIMIENTO** (con temperatura y tiempo):\n**PRESENTACIÓN:**\n**ALÉRGENOS:**\n**NOTAS DE PRODUCCIÓN:**\n**CMV ESTIMADO:**`,
+        `Receta completa para producción en BIG PONS:\nProducto: ${idea.name}\nConcepto: ${idea.concept||""}\nInsumos: ${idea.insumos||""}\n\nDesarrollá una receta detallada con:\n**NOMBRE FINAL DEL PRODUCTO:**\n**DESCRIPCIÓN PARA MENÚ:** (1-2 oraciones atractivas)\n**INGREDIENTES CON GRAMAJES** (por porción individual):\n**PROCEDIMIENTO PASO A PASO** (con temperatura y tiempo):\n**PUNTOS DE CONTROL DE CALIDAD:**\n**ALÉRGENOS:**\n**RENDIMIENTO Y MERMA:**`,
         SYS_RECIPE
       );
       updateIdea(sel, { recipe:r });
@@ -374,113 +461,208 @@ function IdeasTab({ ideas, updateIdea, deleteIdea }) {
     setLoading(false);
   };
 
+  const genLayout = async () => {
+    if (!idea) return; setLoading(true);
+    try {
+      const r = await callClaude(
+        `Procedimiento y layout de armado para BIG PONS:\nProducto: ${idea.name}\nConcepto: ${idea.concept||""}\nInsumos: ${idea.insumos||""}\nReceta: ${idea.recipe||""}\n\nDesarrollá:\n**LAYOUT VISUAL DE ARMADO** (diagrama en texto, de abajo hacia arriba):\n**PROCEDIMIENTO DE ARMADO PASO A PASO:**\n**TIEMPOS POR PASO:**\n**PRESENTACIÓN FINAL:**\n**NOTAS PARA EL EQUIPO DE COCINA:**`,
+        SYS_LAYOUT
+      );
+      updateIdea(sel, { layout:r });
+    } catch { alert("Error generando layout."); }
+    setLoading(false);
+  };
+
   const genViab = async () => {
     if (!idea) return; setLoading(true);
     try {
       const r = await callClaude(
-        `Análisis de viabilidad P08.001 para:\nProducto: ${idea.name}\nConcepto: ${idea.concept||""}\nPrecio ARS: ${idea.precioARS||"?"} / USD: ${idea.precioUSD||"?"}\nCMV: ${idea.cmv||"?"}%\nIngredientes: ${idea.ingredientes||""}\n\nAnalizá:\n**VIABILIDAD TÉCNICA:**\n**VIABILIDAD OPERACIONAL:**\n¿Lanzamiento grande o satélite?\n**VIABILIDAD ECONÓMICA:**\n**VIABILIDAD COMERCIAL:**\n**PLAN MKT SUGERIDO:**\n**RECOMENDACIÓN FINAL:**`,
+        `Análisis de viabilidad P08.001 para BIG PONS:\nProducto: ${idea.name}\nConcepto: ${idea.concept||""}\nSegmento: ${idea.segmento||""}\nInsumos: ${idea.insumos||""}\n\nAnalizá:\n**VIABILIDAD TÉCNICA:**\n**VIABILIDAD OPERACIONAL:**\n¿Lanzamiento grande o satélite?\n**VIABILIDAD ECONÓMICA:**\n**VIABILIDAD COMERCIAL:**\n**PLAN MKT SUGERIDO:**\n**RECOMENDACIÓN FINAL:**`,
         SYS_PRODUCT
       );
-      updateIdea(sel, { viabilidad:r, stage:(idea.stage==="ideas"||idea.stage==="viabilidad")?"propuesta":idea.stage });
+      updateIdea(sel, { viabilidad:r, stage: idea.stage==="prueba" ? "propuesta" : idea.stage });
     } catch { alert("Error generando análisis."); }
     setLoading(false);
   };
 
+  // ── DETAIL VIEW ──
   if (sel && idea) {
     const stage = STAGES.find(s=>s.id===idea.stage)||STAGES[0];
+    const isPrueba = ["prueba","propuesta","aprobacion","lanzamiento","seguimiento"].includes(idea.stage);
+
     return (
       <div className="fu">
-        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20, flexWrap:"wrap" }}>
-          <button className="btn-gh" onClick={()=>{ setSel(null); setSubTab("concepto"); }}>← Volver</button>
+        {/* Header */}
+        <div style={{ display:"flex", alignItems:"flex-start", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+          <button className="btn-gh" onClick={()=>{ setSel(null); setSubTab("fase1"); }}>← Volver</button>
           <div style={{ flex:1 }}>
             <h2 style={{ fontFamily:"'Bebas Neue'", fontSize:26, color:"#FFBA00" }}>{idea.name}</h2>
             <div style={{ display:"flex", gap:8, marginTop:6, flexWrap:"wrap" }}>
-              <Tag color={stage.color}>⬡ Etapa {stage.etapa} – {stage.label}</Tag>
+              <Tag color={stage.color}>⬡ {stage.label}</Tag>
               {idea.categoria && <Tag color="#8B5CF6">{idea.categoria}</Tag>}
               {idea.tipo && <Tag color="#3B82F6">{idea.tipo}</Tag>}
+              {idea.segmento && (
+                <span className="tag" style={{ background:"rgba(255,186,0,.15)", color:"#FFBA00", border:"1px solid rgba(255,186,0,.3)", fontFamily:"'Bebas Neue'", fontSize:13, letterSpacing:1 }}>
+                  SEG {idea.segmento}
+                </span>
+              )}
             </div>
           </div>
-          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-            <button className="btn-ol" onClick={()=>setEditModal(true)}>✏️ Editar</button>
-            <StageSel idea={idea} updateIdea={updateIdea} />
-          </div>
+          <StageSel idea={idea} updateIdea={updateIdea} />
         </div>
 
+        {/* Sub-tabs */}
         <div style={{ display:"flex", borderBottom:`1px solid #252525`, marginBottom:24, overflowX:"auto" }}>
-          {[["concepto","💡 Concepto"],["recipe","🍔 Receta"],["viabilidad","📊 Viabilidad"],["info","ℹ️ Info"]].map(([v,l])=>(
-            <button key={v} className={`tab ${subTab===v?"on":""}`} onClick={()=>setSubTab(v)} style={{ fontSize:13 }}>{l}</button>
-          ))}
+          <button className={`tab ${subTab==="fase1"?"on":""}`} onClick={()=>setSubTab("fase1")} style={{ fontSize:13 }}>💡 Fase 1</button>
+          <button className={`tab ${subTab==="prueba"?"on":""}`} onClick={()=>setSubTab("prueba")} style={{ fontSize:13, opacity:isPrueba?1:.45 }}>🧪 Prueba de Producto</button>
+          <button className={`tab ${subTab==="viabilidad"?"on":""}`} onClick={()=>setSubTab("viabilidad")} style={{ fontSize:13, opacity:isPrueba?1:.45 }}>📊 Viabilidad</button>
         </div>
 
-        {subTab==="concepto" && (
+        {/* FASE 1 */}
+        {subTab==="fase1" && (
           <div>
-            {idea.concept
-              ? <div style={{ background:"#161616", border:`1px solid #252525`, borderRadius:12, padding:24, marginBottom:16 }}><pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.85, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.concept}</pre></div>
-              : <div style={{ background:"#1E1E1E", border:`1px dashed #252525`, borderRadius:12, padding:24, color:"#888", fontSize:14, marginBottom:16 }}>Sin concepto. Editá la idea para agregar una descripción.</div>
-            }
-            {idea.trend && <Tag color="#3B82F6">📈 Tendencia: {idea.trend}</Tag>}
-          </div>
-        )}
-
-        {subTab==="recipe" && (
-          <div>
-            {idea.recipe
-              ? <div style={{ background:"#161616", border:`1px solid #252525`, borderRadius:12, padding:24, marginBottom:16 }}><pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.85, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.recipe}</pre></div>
-              : <div style={{ marginBottom:16 }}><Empty icon="🍔" text="No hay receta. Generála con IA o escribila manualmente en edición." /></div>
-            }
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              <button className="btn-gold" onClick={genRecipe} disabled={loading}>
-                {loading ? <><Spinner size={13} color="#000" /> Generando...</> : (idea.recipe ? "🔄 Regenerar con IA" : "🤖 Generar Receta con IA")}
-              </button>
-              <button className="btn-ol" onClick={()=>setEditModal(true)}>✏️ Editar manualmente</button>
+            <div className="section-block">
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:"#3B82F6", letterSpacing:.5 }}>💡 FASE 1 — IDEA INICIAL</div>
+                <button className="btn-ol" onClick={()=>setEditFase1(true)}>✏️ Editar</button>
+              </div>
+              <div style={{ display:"grid", gap:12 }}>
+                {[
+                  ["Categoría", idea.categoria],
+                  ["Tipo de Lanzamiento", idea.tipo],
+                  ["Segmento", idea.segmento],
+                  ["Perfil de Cliente", idea.perfil],
+                  ["Tendencia de origen", idea.trend],
+                ].filter(([,v])=>v).map(([k,v])=>(
+                  <div key={k} style={{ display:"flex", gap:16, padding:"10px 0", borderBottom:`1px solid #252525` }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:"#888", minWidth:160, flexShrink:0 }}>{k.toUpperCase()}</span>
+                    <span style={{ fontSize:14 }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              {idea.concept && (
+                <div style={{ marginTop:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#888", marginBottom:8 }}>CONCEPTO Y DESCRIPCIÓN</div>
+                  <pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.8, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.concept}</pre>
+                </div>
+              )}
             </div>
+
+            {/* Aprobar Fase 1 */}
+            {idea.stage === "fase1" && (
+              <div style={{ background:"rgba(34,197,94,.08)", border:`1px solid rgba(34,197,94,.25)`, borderRadius:12, padding:20, display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                <div>
+                  <div style={{ fontSize:14, fontWeight:600, color:"#F0F0F0", marginBottom:4 }}>¿Se aprueba la Fase 1?</div>
+                  <div style={{ fontSize:13, color:"#888" }}>Al aprobar pasa a Prueba de Producto donde cargás insumos, receta y layout de armado.</div>
+                </div>
+                <button className="btn-green" onClick={aprobarFase1}>✅ Aprobar → Prueba de Producto</button>
+              </div>
+            )}
           </div>
         )}
 
+        {/* PRUEBA DE PRODUCTO */}
+        {subTab==="prueba" && (
+          <div>
+            {!isPrueba ? (
+              <div style={{ background:"rgba(139,92,246,.08)", border:`1px solid rgba(139,92,246,.25)`, borderRadius:12, padding:24, textAlign:"center" }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>🔒</div>
+                <div style={{ fontSize:14, color:"#888" }}>Esta sección se habilita cuando se aprueba la Fase 1.</div>
+                <div style={{ marginTop:16 }}><button className="btn-green" onClick={()=>{ updateIdea(idea.id,{stage:"prueba"}); }}>✅ Aprobar Fase 1 ahora</button></div>
+              </div>
+            ) : (
+              <div>
+                {/* Insumos */}
+                <div className="section-block">
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#8B5CF6", letterSpacing:.5 }}>🧪 INSUMOS — INGREDIENTES</div>
+                    <button className="btn-ol" onClick={()=>setEditPrueba(true)}>✏️ Editar todo</button>
+                  </div>
+                  {idea.insumos
+                    ? <pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.8, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.insumos}</pre>
+                    : <div style={{ color:"#888", fontSize:14 }}>Sin insumos cargados. Hacé clic en Editar para cargar.</div>
+                  }
+                </div>
+
+                {/* Receta */}
+                <div className="section-block">
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#F97316", letterSpacing:.5 }}>📋 RECETA DETALLADA</div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <button className="btn-gold" onClick={genRecipe} disabled={loading} style={{ fontSize:12, padding:"6px 14px" }}>
+                        {loading ? <><Spinner size={12} color="#000" /> Generando...</> : (idea.recipe ? "🔄 Regenerar con IA" : "🤖 Generar con IA")}
+                      </button>
+                      <button className="btn-ol" onClick={()=>setEditPrueba(true)} style={{ fontSize:12, padding:"6px 14px" }}>✏️ Editar</button>
+                    </div>
+                  </div>
+                  {idea.recipe
+                    ? <pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.8, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.recipe}</pre>
+                    : <div style={{ color:"#888", fontSize:14 }}>Sin receta. Generala con IA o cargala manualmente.</div>
+                  }
+                </div>
+
+                {/* Layout */}
+                <div className="section-block">
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#22C55E", letterSpacing:.5 }}>🏗️ PROCEDIMIENTO Y LAYOUT DE ARMADO</div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <button className="btn-gold" onClick={genLayout} disabled={loading} style={{ fontSize:12, padding:"6px 14px" }}>
+                        {loading ? <><Spinner size={12} color="#000" /> Generando...</> : (idea.layout ? "🔄 Regenerar con IA" : "🤖 Generar con IA")}
+                      </button>
+                      <button className="btn-ol" onClick={()=>setEditPrueba(true)} style={{ fontSize:12, padding:"6px 14px" }}>✏️ Editar</button>
+                    </div>
+                  </div>
+                  {idea.layout
+                    ? <pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.8, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.layout}</pre>
+                    : <div style={{ color:"#888", fontSize:14 }}>Sin layout. Generalo con IA o cargalo manualmente.</div>
+                  }
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* VIABILIDAD */}
         {subTab==="viabilidad" && (
           <div>
-            {idea.viabilidad
-              ? <div style={{ background:"#161616", border:`1px solid #252525`, borderRadius:12, padding:24, marginBottom:16 }}><pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.85, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.viabilidad}</pre></div>
-              : <div style={{ marginBottom:16 }}><Empty icon="📊" text="No hay análisis de viabilidad. Generalo con IA cuando tengas el concepto completo." /></div>
-            }
-            <button className="btn-gold" onClick={genViab} disabled={loading}>
-              {loading ? <><Spinner size={13} color="#000" /> Analizando...</> : (idea.viabilidad ? "🔄 Regenerar con IA" : "🤖 Generar Análisis de Viabilidad")}
-            </button>
-          </div>
-        )}
-
-        {subTab==="info" && (
-          <div style={{ display:"grid", gap:10 }}>
-            {[
-              ["Categoría",idea.categoria],["Tipo",idea.tipo],["Objetivo",idea.objetivo],
-              ["Perfil de Cliente",idea.perfil],
-              ["Precio ARS",idea.precioARS?`$ ${idea.precioARS}`:""],
-              ["Precio USD",idea.precioUSD?`USD ${idea.precioUSD}`:""],
-              ["CMV Objetivo",idea.cmv?`${idea.cmv}%`:""],
-              ["Ingredientes Clave",idea.ingredientes],["Notas",idea.notas],
-              ["Tendencia origen",idea.trend],
-              ["Fecha",idea.createdAt?new Date(idea.createdAt).toLocaleDateString("es-AR"):""],
-            ].filter(([,v])=>v).map(([k,v])=>(
-              <div key={k} style={{ background:"#161616", border:`1px solid #252525`, borderRadius:10, padding:"12px 18px", display:"flex", gap:16 }}>
-                <span style={{ fontSize:11, fontWeight:700, color:"#888", minWidth:150, flexShrink:0 }}>{k.toUpperCase()}</span>
-                <span style={{ fontSize:14 }}>{v}</span>
+            {!isPrueba ? (
+              <div style={{ background:"rgba(139,92,246,.08)", border:`1px solid rgba(139,92,246,.25)`, borderRadius:12, padding:24, textAlign:"center" }}>
+                <div style={{ fontSize:32, marginBottom:12 }}>🔒</div>
+                <div style={{ fontSize:14, color:"#888" }}>Esta sección se habilita cuando se aprueba la Fase 1.</div>
               </div>
-            ))}
+            ) : (
+              <div>
+                {idea.viabilidad
+                  ? <div className="section-block"><pre style={{ whiteSpace:"pre-wrap", fontSize:14, lineHeight:1.85, color:"#F0F0F0", fontFamily:"'DM Sans'" }}>{idea.viabilidad}</pre></div>
+                  : <div style={{ marginBottom:16 }}><Empty icon="📊" text="No hay análisis de viabilidad. Generalo con IA cuando tengas el concepto y los insumos completos." /></div>
+                }
+                <button className="btn-gold" onClick={genViab} disabled={loading}>
+                  {loading ? <><Spinner size={13} color="#000" /> Analizando...</> : (idea.viabilidad ? "🔄 Regenerar con IA" : "🤖 Generar Análisis de Viabilidad")}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {editModal && (
-          <Modal title={`EDITAR — ${idea.name}`} onClose={()=>setEditModal(false)} wide>
-            <IdeaForm initial={idea} onSave={d=>{ updateIdea(sel,d); setEditModal(false); }} onCancel={()=>setEditModal(false)} />
+        {/* Modals */}
+        {editFase1 && (
+          <Modal title={`EDITAR FASE 1 — ${idea.name}`} onClose={()=>setEditFase1(false)} wide>
+            <Fase1Form initial={idea} onSave={d=>{ updateIdea(sel,d); setEditFase1(false); }} onCancel={()=>setEditFase1(false)} />
+          </Modal>
+        )}
+        {editPrueba && (
+          <Modal title={`PRUEBA DE PRODUCTO — ${idea.name}`} onClose={()=>setEditPrueba(false)} wide>
+            <PruebaForm initial={idea} onSave={d=>{ updateIdea(sel,d); setEditPrueba(false); }} onCancel={()=>setEditPrueba(false)} />
           </Modal>
         )}
       </div>
     );
   }
 
+  // ── LIST VIEW ──
   return (
     <div className="fu">
-      <SectionTitle sub="Administrá todas tus ideas — generadas con IA o cargadas manualmente">IDEAS & DESARROLLO</SectionTitle>
+      <SectionTitle sub="Administrá todas tus ideas — desde la Fase 1 hasta el lanzamiento">IDEAS & DESARROLLO</SectionTitle>
       {ideas.length > 0 && (
         <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
           <button className="btn-gh" style={{ borderColor:filter==="todas"?"#FFBA00":"#252525", color:filter==="todas"?"#FFBA00":"#888" }} onClick={()=>setFilter("todas")}>Todas ({ideas.length})</button>
@@ -500,26 +682,22 @@ function IdeasTab({ ideas, updateIdea, deleteIdea }) {
               return (
                 <div key={idea.id} className="hcard" style={{ background:"#161616", border:`1px solid #252525`, borderRadius:12, padding:20 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
-                    <div style={{ flex:1, minWidth:0, cursor:"pointer" }} onClick={()=>{ setSel(idea.id); setSubTab("concepto"); }}>
+                    <div style={{ flex:1, minWidth:0, cursor:"pointer" }} onClick={()=>{ setSel(idea.id); setSubTab("fase1"); }}>
                       <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:10 }}>
                         <Tag color={stage.color}>⬡ {stage.label}</Tag>
                         {idea.categoria && <Tag color="#8B5CF6">{idea.categoria}</Tag>}
-                        {idea.recipe && <Tag color="#22C55E">✓ Receta</Tag>}
-                        {idea.viabilidad && <Tag color="#3B82F6">✓ Viabilidad</Tag>}
+                        {idea.segmento && <span className="tag" style={{ background:"rgba(255,186,0,.15)", color:"#FFBA00" }}>SEG {idea.segmento}</span>}
+                        {idea.insumos && <Tag color="#22C55E">✓ Insumos</Tag>}
+                        {idea.recipe && <Tag color="#F97316">✓ Receta</Tag>}
+                        {idea.layout && <Tag color="#3B82F6">✓ Layout</Tag>}
                         {idea.trend && <Tag color="#888">📈 IA</Tag>}
                       </div>
                       <h3 style={{ fontSize:17, fontWeight:600, marginBottom:6 }}>{idea.name}</h3>
-                      {(idea.precioARS||idea.precioUSD||idea.cmv) && (
-                        <div style={{ display:"flex", gap:16, fontSize:13, color:"#888", marginBottom:8 }}>
-                          {idea.precioARS && <span>🇦🇷 ${idea.precioARS}</span>}
-                          {idea.precioUSD && <span>🇺🇸 USD {idea.precioUSD}</span>}
-                          {idea.cmv && <span>CMV: {idea.cmv}%</span>}
-                        </div>
-                      )}
+                      {idea.perfil && <p style={{ fontSize:12, color:"#888", marginBottom:4 }}>👤 {idea.perfil}</p>}
                       {idea.concept && <p style={{ fontSize:13, color:"#888", lineHeight:1.5 }}>{idea.concept.replace(/\*\*/g,"").substring(0,160)}...</p>}
                     </div>
                     <div style={{ display:"flex", flexDirection:"column", gap:8, flexShrink:0 }}>
-                      <button className="btn-ol" onClick={()=>{ setSel(idea.id); setSubTab("concepto"); }}>Ver →</button>
+                      <button className="btn-ol" onClick={()=>{ setSel(idea.id); setSubTab("fase1"); }}>Ver →</button>
                       <button className="btn-rd" onClick={()=>deleteIdea(idea.id)}>🗑</button>
                     </div>
                   </div>
@@ -557,6 +735,7 @@ function StageSel({ idea, updateIdea }) {
   );
 }
 
+// ── PIPELINE ──────────────────────────────────────────────────────────────────
 function PipelineTab({ ideas, updateIdea, deleteIdea }) {
   const [editCard, setEditCard] = useState(null);
   const saveEdit = (id, field, value) => { updateIdea(id,{[field]:value}); setEditCard(null); };
@@ -599,13 +778,12 @@ function PipelineTab({ ideas, updateIdea, deleteIdea }) {
                         ) : (
                           <div title="Clic para editar nombre" style={{ fontSize:13, fontWeight:600, marginBottom:6, cursor:"text", lineHeight:1.3 }} onClick={()=>setEditCard(idea.id)}>{idea.name}</div>
                         )}
-                        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8 }}>
-                          {idea.recipe && <span style={{ fontSize:9, color:"#22C55E", fontWeight:700 }}>✓REC</span>}
-                          {idea.viabilidad && <span style={{ fontSize:9, color:"#3B82F6", fontWeight:700 }}>✓VIA</span>}
-                          {idea.precioARS && <span style={{ fontSize:9, color:"#888" }}>ARS {idea.precioARS}</span>}
-                          {idea.precioUSD && <span style={{ fontSize:9, color:"#888" }}>USD {idea.precioUSD}</span>}
+                        <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:8 }}>
+                          {idea.segmento && <span style={{ fontSize:9, color:"#FFBA00", fontWeight:700 }}>SEG {idea.segmento}</span>}
+                          {idea.insumos && <span style={{ fontSize:9, color:"#22C55E", fontWeight:700 }}>✓INS</span>}
+                          {idea.recipe && <span style={{ fontSize:9, color:"#F97316", fontWeight:700 }}>✓REC</span>}
+                          {idea.layout && <span style={{ fontSize:9, color:"#3B82F6", fontWeight:700 }}>✓LAY</span>}
                         </div>
-                        {idea.notas && !isEditing && <div style={{ fontSize:11, color:"#888", marginBottom:8, lineHeight:1.4, fontStyle:"italic" }}>{idea.notas.substring(0,80)}{idea.notas.length>80?"...":""}</div>}
                         <div style={{ display:"flex", gap:5 }}>
                           {idx>0 && <button onClick={()=>updateIdea(idea.id,{stage:STAGES[idx-1].id})} style={{ fontSize:10, padding:"4px 8px", background:"transparent", border:`1px solid #252525`, color:"#888", borderRadius:5, cursor:"pointer", fontFamily:"'DM Sans'" }}>← Atrás</button>}
                           {idx<STAGES.length-1 && <button onClick={()=>updateIdea(idea.id,{stage:STAGES[idx+1].id})} style={{ flex:1, fontSize:10, padding:"4px 8px", background:stage.color+"22", border:`1px solid ${stage.color}55`, color:stage.color, borderRadius:5, cursor:"pointer", fontFamily:"'DM Sans'", fontWeight:600 }}>Avanzar →</button>}
@@ -627,7 +805,7 @@ function PipelineTab({ ideas, updateIdea, deleteIdea }) {
   return (
     <div className="fu">
       <SectionTitle sub={`Kanban del proceso P08.001 · ${ideas.length} producto${ideas.length!==1?"s":""} en desarrollo`}>PIPELINE DE LANZAMIENTO</SectionTitle>
-      <EtapaBlock label="ETAPA I — DESARROLLO DE LA PROPUESTA" stageIds={["ideas","viabilidad","propuesta","aprobacion"]} />
+      <EtapaBlock label="ETAPA I — DESARROLLO DE LA PROPUESTA" stageIds={["fase1","prueba","propuesta","aprobacion"]} />
       <EtapaBlock label="ETAPA II — LANZAMIENTO" stageIds={["lanzamiento","seguimiento"]} />
       {ideas.length===0 && <Empty icon="🚀" text='No hay productos en el pipeline. Creá una idea con "➕ Nueva Idea" o desde Tendencias.' />}
     </div>
