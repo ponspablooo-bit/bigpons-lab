@@ -14,16 +14,3 @@ export async function POST(request) {
     if (body.tools && body.tools.length > 0) {
       headers["anthropic-beta"] = "web-search-2025-03-05";
     }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
