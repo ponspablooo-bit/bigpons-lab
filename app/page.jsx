@@ -17,7 +17,7 @@ const SEGMENTOS = ["S","A","B","C"];
 async function callClaude(userMsg, system) {
   const r = await fetch("/api/claude", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1400, system, messages:[{ role:"user", content:userMsg }] }),
+    body: JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:1400, system, messages:[{ role:"user", content:userMsg }] }),
   });
   const d = await r.json();
   if (d.error) throw new Error(d.error.message || d.error);
